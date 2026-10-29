@@ -1,0 +1,404 @@
+{
+ "event": "Hurricane Sandy, 29-30 October 2012",
+ "grid_m": 4,
+ "offset_m": -0.216,
+ "offset_note": "Mean difference between the four waterfront high-water marks (within 100 m of the bulkhead) and the simulated peak with the raw Battery boundary.",
+ "hwm": [
+  {
+   "id": 6091,
+   "site": "on glass door of food court inside Hoboken terminal",
+   "county": "Hudson County",
+   "quality": "Excellent: +/- 0.05 ft",
+   "type": "Mud",
+   "obs": 3.231,
+   "raw": 3.438,
+   "corrected": 3.222,
+   "role": "calibration"
+  },
+  {
+   "id": 6080,
+   "site": "on church",
+   "county": "Hudson County",
+   "quality": "Good: +/- 0.10 ft",
+   "type": "Mud",
+   "obs": 2.865,
+   "raw": 3.415,
+   "corrected": 3.173,
+   "role": "validation"
+  },
+  {
+   "id": 6085,
+   "site": "glass window",
+   "county": "Hudson County",
+   "quality": "Good: +/- 0.10 ft",
+   "type": "Mud",
+   "obs": 3.2,
+   "raw": 3.438,
+   "corrected": 3.222,
+   "role": "calibration"
+  },
+  {
+   "id": 6336,
+   "site": "on building",
+   "county": "New York County",
+   "quality": "Excellent: +/- 0.05 ft",
+   "type": "Seed line",
+   "obs": 3.17,
+   "raw": 3.438,
+   "corrected": 3.222,
+   "role": "calibration"
+  },
+  {
+   "id": 6335,
+   "site": "on interior wall of fire house",
+   "county": "New York County",
+   "quality": "Fair: +/- 0.20 ft",
+   "type": "Stain line",
+   "obs": 3.749,
+   "raw": 3.438,
+   "corrected": 3.222,
+   "role": "validation"
+  },
+  {
+   "id": 6083,
+   "site": "fence",
+   "county": "Hudson County",
+   "quality": "Fair: +/- 0.20 ft",
+   "type": "Debris",
+   "obs": 3.078,
+   "raw": 3.431,
+   "corrected": 3.212,
+   "role": "validation"
+  },
+  {
+   "id": 6084,
+   "site": "fence",
+   "county": "Hudson County",
+   "quality": "Fair: +/- 0.20 ft",
+   "type": "Debris",
+   "obs": 3.261,
+   "raw": 3.438,
+   "corrected": 3.222,
+   "role": "calibration"
+  },
+  {
+   "id": 6082,
+   "site": "on inside wall of Lincoln Harbor Park entrance",
+   "county": "Hudson County",
+   "quality": "Good: +/- 0.10 ft",
+   "type": "Mud",
+   "obs": 3.139,
+   "raw": 3.431,
+   "corrected": 3.212,
+   "role": "validation"
+  },
+  {
+   "id": 6092,
+   "site": "southwest corner of parking garage",
+   "county": "Hudson County",
+   "quality": "Excellent: +/- 0.05 ft",
+   "type": "Debris",
+   "obs": 3.139,
+   "raw": 3.428,
+   "corrected": 3.203,
+   "role": "validation"
+  },
+  {
+   "id": 6081,
+   "site": "on garage",
+   "county": "Hudson County",
+   "quality": "Good: +/- 0.10 ft",
+   "type": "Mud",
+   "obs": 3.658,
+   "raw": 3.414,
+   "corrected": 3.171,
+   "role": "validation"
+  }
+ ],
+ "stats": {
+  "raw_all": {
+   "n": 10,
+   "bias": 0.182,
+   "mae": 0.293,
+   "rmse": 0.309
+  },
+  "corrected_all": {
+   "n": 10,
+   "bias": -0.041,
+   "mae": 0.172,
+   "rmse": 0.253
+  },
+  "raw_heldout": {
+   "n": 6,
+   "bias": 0.155,
+   "mae": 0.34,
+   "rmse": 0.354
+  },
+  "corrected_heldout": {
+   "n": 6,
+   "bias": -0.072,
+   "mae": 0.266,
+   "rmse": 0.326
+  },
+  "corrected_heldout_median_abs": 0.221,
+  "corrected_inland": {
+   "n": 5,
+   "bias": 0.018,
+   "mae": 0.213,
+   "rmse": 0.268
+  },
+  "corrected_inland_median_abs": 0.134
+ },
+ "flooded_area_km2_peak": 2.767,
+ "flooded_area_km2_peak_raw": 2.917,
+ "steps": 134340,
+ "series": [
+  {
+   "t": 1,
+   "stage": 1.485,
+   "area_km2": 0.0,
+   "volume_hm3": 0.0
+  },
+  {
+   "t": 901,
+   "stage": 1.575,
+   "area_km2": 0.044,
+   "volume_hm3": 0.023
+  },
+  {
+   "t": 1801,
+   "stage": 1.679,
+   "area_km2": 0.054,
+   "volume_hm3": 0.03
+  },
+  {
+   "t": 2700,
+   "stage": 1.792,
+   "area_km2": 0.071,
+   "volume_hm3": 0.04
+  },
+  {
+   "t": 3600,
+   "stage": 1.904,
+   "area_km2": 0.108,
+   "volume_hm3": 0.054
+  },
+  {
+   "t": 4500,
+   "stage": 2.028,
+   "area_km2": 0.168,
+   "volume_hm3": 0.08
+  },
+  {
+   "t": 5400,
+   "stage": 2.141,
+   "area_km2": 0.277,
+   "volume_hm3": 0.126
+  },
+  {
+   "t": 6300,
+   "stage": 2.264,
+   "area_km2": 0.419,
+   "volume_hm3": 0.202
+  },
+  {
+   "t": 7200,
+   "stage": 2.407,
+   "area_km2": 0.609,
+   "volume_hm3": 0.32
+  },
+  {
+   "t": 8100,
+   "stage": 2.561,
+   "area_km2": 0.866,
+   "volume_hm3": 0.504
+  },
+  {
+   "t": 9000,
+   "stage": 2.743,
+   "area_km2": 1.197,
+   "volume_hm3": 0.795
+  },
+  {
+   "t": 9900,
+   "stage": 2.901,
+   "area_km2": 1.496,
+   "volume_hm3": 1.166
+  },
+  {
+   "t": 10800,
+   "stage": 2.994,
+   "area_km2": 1.781,
+   "volume_hm3": 1.533
+  },
+  {
+   "t": 11700,
+   "stage": 3.043,
+   "area_km2": 2.053,
+   "volume_hm3": 1.827
+  },
+  {
+   "t": 12600,
+   "stage": 3.091,
+   "area_km2": 2.288,
+   "volume_hm3": 2.105
+  },
+  {
+   "t": 13500,
+   "stage": 3.16,
+   "area_km2": 2.47,
+   "volume_hm3": 2.417
+  },
+  {
+   "t": 14400,
+   "stage": 3.201,
+   "area_km2": 2.6,
+   "volume_hm3": 2.719
+  },
+  {
+   "t": 15300,
+   "stage": 3.218,
+   "area_km2": 2.685,
+   "volume_hm3": 2.984
+  },
+  {
+   "t": 16200,
+   "stage": 3.192,
+   "area_km2": 2.722,
+   "volume_hm3": 3.17
+  },
+  {
+   "t": 17100,
+   "stage": 3.131,
+   "area_km2": 2.719,
+   "volume_hm3": 3.229
+  },
+  {
+   "t": 18000,
+   "stage": 3.043,
+   "area_km2": 2.69,
+   "volume_hm3": 3.179
+  },
+  {
+   "t": 18900,
+   "stage": 2.926,
+   "area_km2": 2.62,
+   "volume_hm3": 3.02
+  },
+  {
+   "t": 19800,
+   "stage": 2.793,
+   "area_km2": 2.531,
+   "volume_hm3": 2.805
+  },
+  {
+   "t": 20700,
+   "stage": 2.63,
+   "area_km2": 2.411,
+   "volume_hm3": 2.551
+  },
+  {
+   "t": 21600,
+   "stage": 2.429,
+   "area_km2": 2.256,
+   "volume_hm3": 2.296
+  },
+  {
+   "t": 22500,
+   "stage": 2.215,
+   "area_km2": 2.101,
+   "volume_hm3": 2.071
+  },
+  {
+   "t": 23400,
+   "stage": 1.964,
+   "area_km2": 1.952,
+   "volume_hm3": 1.892
+  },
+  {
+   "t": 24300,
+   "stage": 1.734,
+   "area_km2": 1.855,
+   "volume_hm3": 1.767
+  },
+  {
+   "t": 25200,
+   "stage": 1.509,
+   "area_km2": 1.799,
+   "volume_hm3": 1.673
+  },
+  {
+   "t": 26100,
+   "stage": 1.303,
+   "area_km2": 1.757,
+   "volume_hm3": 1.596
+  },
+  {
+   "t": 27000,
+   "stage": 1.153,
+   "area_km2": 1.723,
+   "volume_hm3": 1.533
+  },
+  {
+   "t": 27900,
+   "stage": 1.028,
+   "area_km2": 1.694,
+   "volume_hm3": 1.478
+  },
+  {
+   "t": 28800,
+   "stage": 0.908,
+   "area_km2": 1.667,
+   "volume_hm3": 1.43
+  },
+  {
+   "t": 29700,
+   "stage": 0.801,
+   "area_km2": 1.642,
+   "volume_hm3": 1.387
+  },
+  {
+   "t": 30600,
+   "stage": 0.712,
+   "area_km2": 1.621,
+   "volume_hm3": 1.349
+  },
+  {
+   "t": 31500,
+   "stage": 0.603,
+   "area_km2": 1.598,
+   "volume_hm3": 1.315
+  },
+  {
+   "t": 32400,
+   "stage": 0.485,
+   "area_km2": 1.58,
+   "volume_hm3": 1.284
+  }
+ ],
+ "tests": [
+  {
+   "name": "Lake at rest",
+   "result": "Max depth change below 1e-5 m, max discharge below 1e-6 m2/s after 2,000 steps over steps in the bed"
+  },
+  {
+   "name": "Mass conservation with rain",
+   "result": "Volume error below 0.02% after one hour of rain on a closed basin"
+  },
+  {
+   "name": "Normal depth on a plane",
+   "result": "Steady flow on a 1% slope: discharge error 0.01%, depth error 0.76% against Manning's equation"
+  },
+  {
+   "name": "Boundary inflow",
+   "result": "A basin connected to boundary water fills to the boundary stage within 1 cm"
+  }
+ ],
+ "parity": {
+  "steps": 400,
+  "max_abs_dh_m": 2.23e-05,
+  "mean_abs_dh_m": 1.29e-07,
+  "max_abs_dq_m2s": 0.0001,
+  "volume_ratio": 0.9999998
+ }
+}

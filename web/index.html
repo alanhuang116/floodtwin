@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FloodTwin · Hoboken and Manhattan West Side</title>
+<meta name="description" content="A GPU shallow-water flood model of Hoboken, New Jersey and Manhattan's West Side that runs in the browser. Replay Hurricane Sandy, test design storms and defences, and see building-level damage and losses.">
+<meta property="og:title" content="FloodTwin · Hoboken and Manhattan West Side">
+<meta property="og:description" content="A 4 m hydrodynamic flood model on your GPU: Hurricane Sandy replay, design storms, defences, building damage and portfolio losses.">
+<meta property="og:image" content="https://alanhuang116.github.io/floodtwin/assets/og.jpg">
+<meta property="og:url" content="https://alanhuang116.github.io/floodtwin/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0a0d0f">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="view" tabindex="0" aria-label="3D view of Hoboken and Manhattan's West Side"></canvas>
+<div id="labels" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 22 22" aria-hidden="true">
+      <rect x="1.75" y="1.75" width="18.5" height="18.5" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M4.5 12.6c2.2-1.5 4.2-1.5 6.5 0s4.3 1.5 6.5 0V17.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5Z" fill="#ffb547"/>
+    </svg>
+    <span class="brand-name">FloodTwin</span>
+    <span class="brand-by">by Entanglix</span>
+    <span class="brand-sep"></span>
+    <span class="brand-place">Hoboken, NJ · Manhattan West Side</span>
+  </div>
+  <div class="transport">
+    <button class="icon-btn panel-toggle" id="toggle-left" title="Scenario" aria-label="Scenario panel"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    <button class="icon-btn" id="btn-restart" title="Restart (R)" aria-label="Restart"><svg viewBox="0 0 16 16"><path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v3h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="icon-btn play" id="btn-play" title="Run (Space)" aria-label="Run"><svg viewBox="0 0 16 16" id="ico-play"><path d="M5 3.2v9.6c0 .4.4.6.7.4l7.4-4.8a.5.5 0 0 0 0-.8L5.7 2.8c-.3-.2-.7 0-.7.4Z" fill="currentColor"/></svg><svg viewBox="0 0 16 16" id="ico-pause" hidden><rect x="4" y="3" width="2.6" height="10" rx=".6" fill="currentColor"/><rect x="9.4" y="3" width="2.6" height="10" rx=".6" fill="currentColor"/></svg></button>
+    <div class="clock" id="clock">--:--<small id="clock-sub">Loading</small></div>
+    <div class="seg speed-seg" id="speed" role="group" aria-label="Playback speed"></div>
+    <button class="icon-btn panel-toggle" id="toggle-right" title="Analysis" aria-label="Analysis panel"><svg viewBox="0 0 16 16"><path d="M3 13V8M8 13V3M13 13V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+  </div>
+  <div class="top-actions">
+    <button class="btn" id="btn-share" title="Copy a link to this scenario"><svg viewBox="0 0 16 16"><path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span>Share</span></button>
+    <button class="btn" id="btn-export" title="Download results"><svg viewBox="0 0 16 16"><path d="M8 2.5v8M4.8 7.5L8 10.7l3.2-3.2M3 13.5h10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Export</span></button>
+    <a class="btn" href="methodology.html" target="_blank" rel="noopener"><svg viewBox="0 0 16 16"><path d="M3 3.5h4a1.5 1.5 0 0 1 1 .5 1.5 1.5 0 0 1 1-.5h4v9H9a1 1 0 0 0-1 1 1 1 0 0 0-1-1H3Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg><span>Methodology</span></a>
+  </div>
+</header>
+
+<aside class="panel left" id="panel-left" aria-label="Scenario">
+  <div class="panel-head"><span class="panel-title">Scenario</span><span class="badge" id="grid-badge">4 m grid</span></div>
+  <div class="panel-body" id="left-body"></div>
+</aside>
+
+<aside class="panel right" id="panel-right" aria-label="Analysis">
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="panel-body" id="right-body"></div>
+</aside>
+
+<div class="viewmodes"><div class="seg" id="modes" role="group" aria-label="View"></div></div>
+<div class="legend overlay-card" id="legend" hidden></div>
+<div class="camtools" id="camtools">
+  <div class="views-menu overlay-card" id="views-menu" hidden></div>
+  <button class="icon-btn" id="btn-views" title="Saved views" aria-label="Saved views"><svg viewBox="0 0 16 16"><path d="M2.5 5.5l3-2 5 2 3-2v9l-3 2-5-2-3 2Z M5.5 3.5v9M10.5 5.5v9" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></button>
+  <button class="icon-btn" id="btn-north" title="Face north" aria-label="Face north"><svg viewBox="0 0 16 16" class="compass" id="compass"><path d="M8 2l2.6 6H5.4Z" fill="#ffb547"/><path d="M8 14l-2.6-6h5.2Z" fill="currentColor" opacity=".55"/></svg></button>
+  <button class="icon-btn" id="btn-shot" title="Save image" aria-label="Save image"><svg viewBox="0 0 16 16"><path d="M2.5 5.5h2.2l1.2-1.8h4.2l1.2 1.8h2.2v7h-11Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8.8" r="2.1" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></button>
+</div>
+<div class="timeline overlay-card" id="timeline"></div>
+<div class="hovercard" id="hovercard" hidden></div>
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+<div class="busy" id="busy" hidden><span class="spinner"></span><span id="busy-text">Building the model grid</span></div>
+<div class="draw-banner overlay-card" id="draw-banner" hidden></div>
+
+<div id="loader">
+  <div class="loader-inner">
+    <div class="loader-brand">
+      <svg class="brand-mark" viewBox="0 0 22 22" aria-hidden="true" style="width:28px;height:28px">
+        <rect x="1.75" y="1.75" width="18.5" height="18.5" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M4.5 12.6c2.2-1.5 4.2-1.5 6.5 0s4.3 1.5 6.5 0V17.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5Z" fill="#ffb547"/>
+      </svg>
+      <span class="brand-name">FloodTwin</span>
+    </div>
+    <div class="loader-lede">Hoboken and Manhattan's West Side at 4 m: lidar terrain, 13,152 buildings and a shallow-water solver that runs on your graphics card.</div>
+    <div class="loader-bar"><i id="loader-bar"></i></div>
+    <div class="loader-status"><span id="loader-text">Starting</span><span id="loader-pct">0%</span></div>
+  </div>
+</div>
+
+<div class="scrim" id="welcome" hidden>
+  <div class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+    <h1 id="welcome-title">Hoboken and Manhattan's West Side, flooded on your GPU</h1>
+    <p>FloodTwin solves the shallow-water equations on a 4 m grid in real time, from lidar terrain and every building footprint, and prices the damage building by building. Replay Hurricane Sandy, or build a storm of your own and test defences against it.</p>
+    <div class="welcome-facts">
+      <div><b>941,000</b><span>Grid cells solved on your graphics card</span></div>
+      <div><b>13,152</b><span>Buildings, with lidar heights and NSI values</span></div>
+      <div><b>10</b><span>USGS Sandy high-water marks for validation</span></div>
+    </div>
+    <div class="welcome-actions">
+      <button class="btn primary" id="welcome-sandy">Replay Hurricane Sandy</button>
+      <button class="btn" id="welcome-explore">Build a Scenario</button>
+    </div>
+    <div class="welcome-foot">Best on a desktop or laptop with a dedicated GPU. Drag to orbit, right-drag to pan, scroll to zoom, click a building for its damage.</div>
+  </div>
+</div>
+
+<noscript><div style="position:fixed;inset:0;display:grid;place-items:center;background:#0a0d0f;color:#e8eef1;font:14px system-ui">FloodTwin needs JavaScript and WebGL 2.</div></noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

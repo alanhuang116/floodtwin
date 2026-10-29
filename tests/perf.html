@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Solver Throughput</title>
+<script type="importmap">{"imports": {"three": "../web/vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<pre id="out">running</pre>
+<script type="module">
+// Wall-clock throughput of the GPU solver on the Sandy boundary: steps per
+// second and simulated seconds per real second at each cell size.
+import * as THREE from 'three';
+import { loadAll } from '../web/js/data.js';
+import { buildGrid } from '../web/js/grid.js';
+import { FloodSolver } from '../web/js/solver.js';
+import { presetById, makeScenario } from '../web/js/scenarios.js';
+const out = document.getElementById('out');
+try {
+  const data = await loadAll('../web/data');
+  const renderer = new THREE.WebGLRenderer({ canvas: document.createElement('canvas') });
+  const gl = renderer.getContext();
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const res = { gpu: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : '?', runs: [] };
+  const sc = makeScenario(presetById('sandy').p, data.events);
+  const q = new URLSearchParams(location.search);
+  for (const dx of [+(q.get('dx') || 4)]) {
+    const g = buildGrid(data, { dx, drainage: 10, infiltration: 10 });
+    const s = new FloodSolver(renderer, { nx: g.nx, ny: g.ny, dx: g.dx, bed: g.bed });
+    s.minCoastZ = g.minCoastZ;
+    let t = 3.5 * 3600;            // start on the rising limb, when the city is flooding
+    s.stage = sc.stage(t); s.step(1e-4); s.reduceSync();
+    const warm = 200, n = +(q.get('n') || 3000);
+    for (let k = 0; k < warm; k++) { s.stage = sc.stage(t); const dt = s.stableDt(); s.step(dt); t += dt; if (k % 20 === 0) s.reduceSync(); }
+    s.reduceSync();
+    const t0 = performance.now(), sim0 = t;
+    for (let k = 0; k < n; k++) {
+      s.stage = sc.stage(t); const dt = s.stableDt(); s.step(dt); t += dt;
+      if (k % 20 === 0) s.reduceSync();
+      if (k % 40 === 0) s.updateStats();
+    }
+    s.reduceSync();
+    const ms = performance.now() - t0;
+    res.runs.push({ dx, cells: g.nx * g.ny, steps: n, ms: Math.round(ms), stepsPerSec: Math.round(n / (ms / 1000)),
+      simPerReal: Math.round((t - sim0) / (ms / 1000)), meanDt: +((t - sim0) / n).toFixed(3) });
+    s.dispose();
+  }
+  out.textContent = JSON.stringify(res);
+} catch (e) { out.textContent = JSON.stringify({ error: String(e.stack || e) }); }
+</script>
+</body>
+</html>

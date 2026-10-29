@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+data/raw/
+data/processed/terrain.npz
+*.log.tmp
+.DS_Store
+Thumbs.db

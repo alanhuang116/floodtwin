@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>GPU Parity</title>
+<script type="importmap">{"imports": {"three": "../web/vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<pre id="out">running</pre>
+<script type="module">
+import * as THREE from 'three';
+import { FloodSolver } from '../web/js/solver.js';
+
+const out = document.getElementById('out');
+try {
+  const c = await (await fetch('parity_case.json')).json();
+  const canvas = document.createElement('canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+  const n = c.nx * c.ny;
+  const bed = new Float32Array(n * 4);
+  for (let k = 0; k < n; k++) { bed[4 * k] = c.z[k]; bed[4 * k + 1] = c.n[k]; bed[4 * k + 2] = c.kind[k]; bed[4 * k + 3] = c.loss[k]; }
+  const solver = new FloodSolver(renderer, { nx: c.nx, ny: c.ny, dx: c.dx, bed });
+  Object.assign(solver.params, c.params);
+  const init = new Float32Array(n * 4);
+  for (let k = 0; k < n; k++) init[4 * k] = c.h0[k];
+  solver.writeState(init);
+  solver.stage = c.stage; solver.rain = c.rain;
+  const t0 = performance.now();
+  for (const dt of c.dts) solver.step(dt);
+  const s = solver.readState();
+  const ms = performance.now() - t0;
+  const h = [], qx = [], qy = [];
+  for (let k = 0; k < n; k++) { h.push(s[4 * k]); qx.push(s[4 * k + 1]); qy.push(s[4 * k + 2]); }
+  out.textContent = JSON.stringify({ ok: true, ms, h, qx, qy, gl: renderer.getContext().getParameter(renderer.getContext().VERSION) });
+} catch (e) {
+  out.textContent = JSON.stringify({ ok: false, error: String(e && e.stack || e) });
+}
+</script>
+</body>
+</html>

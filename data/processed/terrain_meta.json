@@ -1,0 +1,38 @@
+{
+ "grid": {
+  "epsg": 26918,
+  "x0": 580472,
+  "y0": 4509496,
+  "x1": 584528,
+  "y1": 4513208,
+  "width_m": 4056,
+  "height_m": 3712
+ },
+ "res2": 2.0,
+ "rows2": 1856,
+ "cols2": 2028,
+ "dem_encoding": {
+  "offset": 30.0,
+  "scale": 0.01,
+  "delta": "row",
+  "zigzag": true
+ },
+ "fema_bfe_ft": {
+  "AE": [
+   9.0,
+   10.0
+  ]
+ },
+ "files": {
+  "dem_2m.bin.gz": 2217906,
+  "land_2m.bin.gz": 143338,
+  "fema_2m.bin.gz": 24456,
+  "ortho_1m.webp": 3592162
+ },
+ "stats": {
+  "river_km2": 4.927894,
+  "land_min": -27.139984130859375,
+  "land_max": 78.61485290527344,
+  "veg_share": 0.12007700384275317
+ }
+}

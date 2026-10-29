@@ -1,0 +1,32 @@
+{
+ "buildings": 13152,
+ "with_nsi": 8901,
+ "height_sources": {
+  "lidar": 13042,
+  "osm_height": 44,
+  "levels": 13,
+  "nsi_stories": 12,
+  "default": 41
+ },
+ "parts": 1034,
+ "trees": 13209,
+ "cars": 26202,
+ "files": {
+  "ao_2m.bin.gz": 2141307,
+  "bldg_2m.bin.gz": 322398,
+  "buildings.json": 3652832,
+  "trees.json": 505313,
+  "cars.json": 1005513
+ },
+ "nsi_value_struct_total": 34509231912,
+ "residents_night": 176034,
+ "archetypes": {
+  "COM.MIXED.1.UNK": 815,
+  "RES.MF2_4.2.UNK": 3564,
+  "RES.SF.1.CRAWL": 126,
+  "RES.SF.1.ELEV_ENCL": 191,
+  "RES.SF.1.SLAB": 62,
+  "RES.SF.2.BASEMENT": 1990,
+  "RES.SF.2.SLAB": 2153
+ }
+}

@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FloodTwin Methodology</title>
+<meta name="description" content="How FloodTwin works: data, terrain and building processing, the GPU shallow-water solver, boundary conditions, damage and loss estimation, validation against Hurricane Sandy, verification and limitations.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0d0f; --panel: #0f1418; --line: rgba(232, 240, 244, 0.09); --line-2: rgba(232, 240, 244, 0.16);
+  --text: #e8eef1; --text-2: #b4bfc5; --text-3: #75828a; --accent: #ffb547;
+  --font: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif; --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15.5px/1.7 var(--font); -webkit-font-smoothing: antialiased; }
+a { color: var(--text); text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--text-2); }
+header.top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 24px; height: 56px; background: rgba(10, 13, 15, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; text-decoration: none; }
+.brand small { font-weight: 400; color: var(--text-3); font-size: 13px; }
+.btn { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 8px; background: var(--text); color: #0b0e10; font-weight: 500; font-size: 13.5px; text-decoration: none; }
+.layout { display: grid; grid-template-columns: 250px minmax(0, 780px); gap: 56px; justify-content: center; padding: 40px 24px 120px; }
+nav.toc { position: sticky; top: 88px; align-self: start; font-size: 13.5px; max-height: calc(100vh - 110px); overflow: auto; }
+nav.toc .toc-title { color: var(--text-3); margin-bottom: 8px; }
+nav.toc a { display: block; padding: 4px 0 4px 12px; border-left: 1px solid var(--line); color: var(--text-2); text-decoration: none; }
+nav.toc a:hover, nav.toc a.on { color: var(--text); border-left-color: var(--accent); }
+main h1 { font-size: 36px; line-height: 1.2; letter-spacing: -0.025em; margin: 0 0 14px; font-weight: 600; }
+.lede { font-size: 18px; color: var(--text-2); margin: 0 0 26px; line-height: 1.6; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--text-3); font-size: 13px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 40px; }
+h2 { font-size: 24px; letter-spacing: -0.015em; margin: 64px 0 14px; font-weight: 600; scroll-margin-top: 80px; }
+h3 { font-size: 17px; margin: 34px 0 8px; font-weight: 600; scroll-margin-top: 80px; }
+p { margin: 0 0 16px; color: var(--text-2); }
+p strong, li strong { color: var(--text); font-weight: 500; }
+ul, ol { color: var(--text-2); padding-left: 22px; margin: 0 0 16px; }
+li { margin: 4px 0; }
+code { font-family: var(--mono); font-size: 13px; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+.keyfacts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 10px 0 28px; }
+.keyfacts div { background: var(--panel); padding: 16px; }
+.keyfacts b { display: block; font-size: 22px; font-weight: 500; letter-spacing: -0.015em; }
+.keyfacts span { color: var(--text-3); font-size: 13px; line-height: 1.45; display: block; margin-top: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 8px 0 22px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 500; color: var(--text-3); padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line-2); vertical-align: bottom; }
+td { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); color: var(--text-2); vertical-align: top; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+.eq { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 10px 0 20px; overflow-x: auto; }
+.eq math { font-size: 17px; color: var(--text); }
+.eq .where { color: var(--text-3); font-size: 13px; margin-top: 10px; font-family: var(--font); }
+.note { border-left: 2px solid var(--accent); padding: 4px 0 4px 16px; margin: 18px 0 22px; color: var(--text-2); }
+.figure { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 12px 0 22px; }
+.figure svg { display: block; width: 100%; height: auto; }
+.figure .cap { color: var(--text-3); font-size: 13px; margin-top: 10px; }
+.refs li { font-size: 14px; margin: 8px 0; }
+footer { color: var(--text-3); font-size: 13px; border-top: 1px solid var(--line); padding-top: 22px; margin-top: 64px; }
+@media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); gap: 0; } nav.toc { display: none; } .keyfacts { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { main h1 { font-size: 28px; } .keyfacts { grid-template-columns: 1fr; } header.top { padding: 0 14px; } .brand small { display: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="index.html">
+    <svg viewBox="0 0 22 22" width="22" height="22" aria-hidden="true"><rect x="1.75" y="1.75" width="18.5" height="18.5" rx="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4.5 12.6c2.2-1.5 4.2-1.5 6.5 0s4.3 1.5 6.5 0V17.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5Z" fill="#ffb547"/></svg>
+    FloodTwin <small>Methodology</small>
+  </a>
+  <a class="btn" href="index.html">Open the Model</a>
+</header>
+
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+  <div class="toc-title">Contents</div>
+  <a href="#overview">Overview</a>
+  <a href="#domain">Domain and Grid</a>
+  <a href="#data">Data Sources</a>
+  <a href="#terrain">Terrain and Land Cover</a>
+  <a href="#buildings">Buildings and Exposure</a>
+  <a href="#hydraulics">Hydraulic Model</a>
+  <a href="#numerics">Numerical Scheme</a>
+  <a href="#gpu">GPU Implementation</a>
+  <a href="#boundary">Boundary Conditions and Scenarios</a>
+  <a href="#hazard">Hazard Outputs</a>
+  <a href="#losses">Damage and Losses</a>
+  <a href="#portfolio">Portfolio Scoring</a>
+  <a href="#validation">Validation: Hurricane Sandy</a>
+  <a href="#verification">Verification</a>
+  <a href="#performance">Performance</a>
+  <a href="#limitations">Limitations</a>
+  <a href="#outputs">Exports and Formats</a>
+  <a href="#references">References and Licences</a>
+</nav>
+
+<main>
+<h1>How FloodTwin Works</h1>
+<p class="lede">FloodTwin is a two-dimensional hydrodynamic flood model of Hoboken, New Jersey and Manhattan's West Side that runs on the graphics card in a web browser. This page documents every data set, processing step, equation and assumption behind the numbers it shows, and how well it reproduces Hurricane Sandy.</p>
+<div class="meta"><span>Model version 1.0</span><span>Documented October 2026</span><span>Entanglix</span><span>Vertical datum NAVD88, horizontal NAD83 / UTM zone 18N</span></div>
+
+<div class="keyfacts">
+  <div><b>4 m</b><span>default grid; 2 m and 8 m selectable</span></div>
+  <div><b>940,992</b><span>cells at 4 m over 15.1 km²</span></div>
+  <div><b>13,152</b><span>buildings with lidar heights</span></div>
+  <div><b>0.17 m</b><span>mean absolute error at 10 Sandy high-water marks</span></div>
+</div>
+
+<h2 id="overview">Overview</h2>
+<p>The model answers three questions for any flood event on this piece of waterfront: <strong>where does the water go</strong> (depth, speed and arrival time on a 4 m grid, every fraction of a second of simulated time), <strong>how dangerous is it</strong> (a hazard-to-people rating), and <strong>what does it cost</strong> (damage ratio and expected loss for each of the 8,901 buildings with National Structure Inventory records, and for any portfolio of properties loaded into it).</p>
+<p>Flood water is computed with the local inertial form of the shallow-water equations, the formulation used in operational inundation models such as LISFLOOD-FP, solved explicitly on a regular grid. The terrain is the USGS 3DEP one-metre lidar surface; buildings are solid obstacles taken from OpenStreetMap footprints with heights measured from lidar point clouds. The sea boundary is the Hudson River, driven by an observed or synthetic water level; rain falls on every land cell. Damage comes from FloodVuln Global, a distributional depth-damage model fitted to 1.86 million National Flood Insurance Program claims.</p>
+<p>Everything runs client-side: the browser downloads about 13 MB of prepared data, builds the model grid, and steps the solver in WebGL 2 fragment shaders while it renders the scene. No result on screen is precomputed except the reference validation runs reported below, which were produced by exactly the same code.</p>
+
+<h2 id="domain">Domain and Grid</h2>
+<p>The domain is a rectangle 4,056 m east to west and 3,712 m south to north in NAD83 / UTM zone 18N (EPSG:26918), from x = 580,472 to 584,528 m and y = 4,509,496 to 4,513,208 m. It covers Hoboken, the southern part of Weehawken and Lincoln Harbor, the edge of Jersey City Heights, 1.3 km of the Hudson River, and Manhattan from the West Village to Hell's Kitchen, including Chelsea, Hudson Yards and the Javits Center. Elevations are metres above NAVD88.</p>
+<div class="table-wrap"><table>
+<tr><th>Cell size</th><th class="num">Columns × rows</th><th class="num">Cells</th><th>Typical use</th></tr>
+<tr><td>8 m</td><td class="num">507 × 464</td><td class="num">235,248</td><td>Fast screening, integrated graphics</td></tr>
+<tr><td>4 m</td><td class="num">1,014 × 928</td><td class="num">940,992</td><td>Default; resolves streets and most alleys</td></tr>
+<tr><td>2 m</td><td class="num">2,028 × 1,856</td><td class="num">3,763,968</td><td>Detail: narrow gaps between buildings; about eight times the cost of 4 m</td></tr>
+</table></div>
+<p>All grids are aggregated from the same 2 m source layers, so a change of resolution changes only the discretisation, not the inputs.</p>
+
+<h2 id="data">Data Sources</h2>
+<div class="table-wrap"><table>
+<tr><th>Data</th><th>Used for</th><th>Detail</th></tr>
+<tr><td><a href="https://www.usgs.gov/3d-elevation-program">USGS 3DEP</a> bare-earth DEM, 1 m</td><td>Terrain</td><td>Lidar-derived, hydro-flattened; downloaded through the 3DEP ImageServer and mosaicked to the domain</td></tr>
+<tr><td><a href="https://registry.opendata.aws/usgs-lidar/">USGS 3DEP lidar point clouds</a></td><td>Building heights, tree canopy</td><td>New Jersey 2014 and New York City 2017 collections, 108 million points within the domain, read from the Entwine Point Tile service</td></tr>
+<tr><td><a href="https://naip-usdaonline.hub.arcgis.com/">USDA NAIP</a> orthoimagery, 0.5 m</td><td>Ground imagery, vegetation index, roof colour</td><td>Four-band (red, green, blue, near-infrared)</td></tr>
+<tr><td><a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a></td><td>Building footprints and parts, streets</td><td>13,152 footprints and 1,034 building parts; © OpenStreetMap contributors, ODbL</td></tr>
+<tr><td><a href="https://www.hec.usace.army.mil/confluence/nsi">USACE National Structure Inventory</a></td><td>Occupancy, values, first-floor height, storeys, foundation, residents</td><td>22,463 structure points; 22,334 matched to 8,901 footprints</td></tr>
+<tr><td><a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8518750">NOAA CO-OPS 8518750, The Battery</a></td><td>Hurricane Sandy boundary</td><td>Six-minute observed and predicted water level, NAVD88, 28 to 31 October 2012</td></tr>
+<tr><td><a href="https://stn.wim.usgs.gov/FEV/">USGS Short-Term Network</a></td><td>Validation</td><td>Surveyed high-water marks for Hurricane Sandy (event 24); 10 fall inside the domain</td></tr>
+<tr><td><a href="https://hdsc.nws.noaa.gov/pfds/">NOAA Atlas 14</a>, Volume 10</td><td>Design rainfall</td><td>Partial-duration depths for 5 minutes to 60 days, 1 to 1,000 years, at 40.745° N, 74.030° W</td></tr>
+<tr><td><a href="https://www.fema.gov/flood-maps/national-flood-hazard-layer">FEMA National Flood Hazard Layer</a></td><td>Effective flood zones overlay</td><td>54 zone polygons; base flood elevations of 9 and 10 ft NAVD88 in Hoboken</td></tr>
+<tr><td><a href="https://alanhuang116.github.io/floodvuln/">FloodVuln Global</a></td><td>Damage ratios</td><td>Zero-and-one inflated beta model of damage against depth above the first floor, with New Jersey and New York calibration</td></tr>
+</table></div>
+
+<h2 id="terrain">Terrain and Land Cover</h2>
+<h3>River and Boundary Water</h3>
+<p>The 3DEP surface is hydro-flattened: open water is replaced by a flat surface near −0.5 m. The river is the largest connected region below −0.45 m, plus flat pockets within 40 m of it (larger than 300 m², median between −0.8 and −0.3 m, standard deviation under 0.15 m) that piers separate from the main channel. When the model grid is built, marinas, slips and coves below +0.5 m that connect to the river through cells below +0.5 m are added; every bulkhead and pier deck in the domain is higher than that. These cells form the boundary water: their level is prescribed, not computed.</p>
+<h3>Resampling</h3>
+<p>The 1 m surface is block-averaged to 2 m for distribution (encoded as zigzag row differences at 1 cm precision, 2.2 MB compressed), and the model grid averages 2 m blocks to the chosen cell size. A cell is boundary water when more than half of its 2 m sub-cells are river.</p>
+<h3>Land Cover and Roughness</h3>
+<p>Vegetation is NAIP near-infrared NDVI above 0.22 outside buildings and water. Each cell's Manning coefficient is the mean over its sub-cells of the class value, and the user can change the paved and green values.</p>
+<div class="table-wrap"><table>
+<tr><th>Class</th><th class="num">Default Manning n (s/m<sup>1/3</sup>)</th><th>Losses</th></tr>
+<tr><td>Streets, sidewalks and other paved ground</td><td class="num">0.016</td><td>Drainage capacity</td></tr>
+<tr><td>Grass and lawns</td><td class="num">0.035</td><td>Drainage plus infiltration</td></tr>
+<tr><td>Tree canopy</td><td class="num">0.060</td><td>Drainage plus infiltration</td></tr>
+<tr><td>Bare ground and gravel</td><td class="num">0.030</td><td>Drainage capacity</td></tr>
+<tr><td>River</td><td class="num">0.030</td><td>None (prescribed level)</td></tr>
+<tr><td>Porous buildings (option)</td><td class="num">0.150</td><td>None</td></tr>
+</table></div>
+<p>Ambient occlusion for display is computed from the lidar surface with buildings, by horizon scanning in 16 directions at 2 m; it affects shading only.</p>
+
+<h2 id="buildings">Buildings and Exposure</h2>
+<h3>Footprints and Heights</h3>
+<p>Footprints and building parts come from OpenStreetMap. Roof height is the 90th percentile of the lidar normalised surface (first returns minus bare earth) inside the footprint; 13,042 buildings take their height this way, 44 use a newer OSM height tag, and the rest fall back to levels or NSI storeys. A footprint becomes a solid obstacle on the grid where buildings cover more than half of a cell. The default treats buildings as watertight blocks that divert flow; the porous option lets water through at high roughness instead.</p>
+<h3>Ground Level at Each Building</h3>
+<p>Water depth at a building is measured against the ground at its doors: the median elevation of the open cells on a ring around the footprint (up to eight cells, spread by angle, within four cells of the walls). The footprint statistic in the data, the 10th percentile of the bare-earth surface inside the footprint, is not used for depth because it catches areaways and the low corner of sloping lots, and for structures over water (the Hoboken Terminal train shed, sheds on piers, the USS Intrepid) it is the river surface.</p>
+<h3>Exposure Attributes</h3>
+<p>NSI structure points are assigned to the footprint that contains them. Where several fall in one footprint, values, units and residents are summed and the occupancy, foundation, first-floor height, storeys and year come from the most valuable point. 8,901 buildings carry attributes, with $34.5 billion of structure value and 176,034 night-time residents. The remainder are mostly garages, sheds, parts of larger complexes and structures without an NSI record; they are drawn and act as obstacles but carry no loss.</p>
+<h3>Archetypes</h3>
+<p>Each NSI occupancy and foundation type maps to a FloodVuln archetype. Where FloodVuln has no curve for the occupancy, the closest available curve is used and the mapping is flagged as a proxy.</p>
+<div class="table-wrap"><table>
+<tr><th>NSI occupancy</th><th>Foundation or storeys</th><th>FloodVuln archetype</th><th>Mapping</th></tr>
+<tr><td>RES1, single family</td><td>Two or more storeys, basement</td><td>Single-family, 2 storey, basement</td><td>Direct</td></tr>
+<tr><td>RES1</td><td>Two or more storeys, other</td><td>Single-family, 2 storey, slab</td><td>Direct</td></tr>
+<tr><td>RES1</td><td>One storey: slab, crawlspace, pier or pile</td><td>Matching 1 storey curve, elevated with enclosure for pier and pile</td><td>Direct</td></tr>
+<tr><td>RES2, manufactured</td><td>Any</td><td>Manufactured home</td><td>Direct</td></tr>
+<tr><td>RES3A and RES3B, two to four units</td><td>Any</td><td>Small multifamily, 2 storey</td><td>Direct for RES3A, proxy for RES3B</td></tr>
+<tr><td>RES3C to RES3F, larger multifamily</td><td>Any</td><td>Small multifamily, 2 storey</td><td>Proxy</td></tr>
+<tr><td>COM1 retail, COM8 entertainment</td><td>Any</td><td>Commercial, 1 storey</td><td>Direct</td></tr>
+<tr><td>Other commercial, industrial, institutional</td><td>Any</td><td>Commercial, 1 storey</td><td>Proxy</td></tr>
+</table></div>
+<h3>Trees and Vehicles</h3>
+<p>13,209 trees are lidar canopy peaks above 3.5 m in vegetated areas, each with its measured height, a crown radius from the canopy extent in eight directions, and its colour from the aerial image. 26,202 parked vehicles are placed along OSM streets at kerbside spacing to give a sense of scale and motor exposure; their positions are modelled, not observed.</p>
+
+<h2 id="hydraulics">Hydraulic Model</h2>
+<p>Water depth <i>h</i> and unit discharge <b>q</b> = (<i>q</i><sub>x</sub>, <i>q</i><sub>y</sub>) evolve by conservation of mass and a momentum balance in which the advection term is neglected, the local inertial approximation of Bates et al. (2010). It is accurate for slow, gradually varied urban flood flow and much cheaper and more robust than the full shallow-water equations.</p>
+<div class="eq">
+<math display="block"><mfrac><mrow><mo>∂</mo><mi>h</mi></mrow><mrow><mo>∂</mo><mi>t</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><msub><mi>q</mi><mi>x</mi></msub></mrow><mrow><mo>∂</mo><mi>x</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mo>∂</mo><msub><mi>q</mi><mi>y</mi></msub></mrow><mrow><mo>∂</mo><mi>y</mi></mrow></mfrac><mo>=</mo><mi>R</mi><mo>−</mo><mi>L</mi></math>
+<math display="block"><mfrac><mrow><mo>∂</mo><msub><mi>q</mi><mi>x</mi></msub></mrow><mrow><mo>∂</mo><mi>t</mi></mrow></mfrac><mo>+</mo><mi>g</mi><mi>h</mi><mfrac><mrow><mo>∂</mo><mi>η</mi></mrow><mrow><mo>∂</mo><mi>x</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>g</mi><msup><mi>n</mi><mn>2</mn></msup><mo>|</mo><mi mathvariant="bold">q</mi><mo>|</mo><msub><mi>q</mi><mi>x</mi></msub></mrow><msup><mi>h</mi><mrow><mn>7</mn><mo>/</mo><mn>3</mn></mrow></msup></mfrac><mo>=</mo><mn>0</mn></math>
+<div class="where">η = z + h is the water surface (m NAVD88), z the bed, g = 9.81 m/s², n Manning's coefficient, R rainfall and L losses to drainage and infiltration (m/s). The y-momentum equation is the same with x and y exchanged.</div>
+</div>
+
+<h2 id="numerics">Numerical Scheme</h2>
+<p>Depths live at cell centres and discharges on cell faces (a staggered grid): <i>q</i><sub>x</sub> on each east face and <i>q</i><sub>y</sub> on each north face. Each time step updates every face discharge, then every depth.</p>
+<h3>Momentum</h3>
+<p>The face discharge uses the θ-weighted form of de Almeida et al. (2012), which damps the checkerboard oscillation of the original scheme in shallow, slow flow, with friction treated semi-implicitly:</p>
+<div class="eq">
+<math display="block"><msubsup><mi>q</mi><mrow><mi>i</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>=</mo><mfrac><mrow><mi>θ</mi><msubsup><mi>q</mi><mrow><mi>i</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow><mi>n</mi></msubsup><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>θ</mi></mrow><mn>2</mn></mfrac><mrow><mo>(</mo><msubsup><mi>q</mi><mrow><mi>i</mi><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow><mi>n</mi></msubsup><mo>+</mo><msubsup><mi>q</mi><mrow><mi>i</mi><mo>+</mo><mfrac><mn>3</mn><mn>2</mn></mfrac></mrow><mi>n</mi></msubsup><mo>)</mo></mrow><mo>−</mo><mi>g</mi><msub><mi>h</mi><mi>f</mi></msub><mi>Δ</mi><mi>t</mi><mfrac><mrow><msub><mi>η</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>η</mi><mi>i</mi></msub></mrow><mrow><mi>Δ</mi><mi>x</mi></mrow></mfrac></mrow><mrow><mn>1</mn><mo>+</mo><mi>g</mi><mi>Δ</mi><mi>t</mi><msup><msub><mi>n</mi><mi>f</mi></msub><mn>2</mn></msup><mo>|</mo><msup><mi mathvariant="bold">q</mi><mi>n</mi></msup><mo>|</mo><mo>/</mo><msubsup><mi>h</mi><mi>f</mi><mrow><mn>7</mn><mo>/</mo><mn>3</mn></mrow></msubsup></mrow></mfrac></math>
+<div class="where">θ = 0.8 by default (θ = 1 recovers Bates et al. 2010). |<b>q</b>| uses the face-normal discharge and the average of the four neighbouring cross-face discharges. The flow depth at the face is h<sub>f</sub> = max(η<sub>i</sub>, η<sub>i+1</sub>) − max(z<sub>i</sub>, z<sub>i+1</sub>) and n<sub>f</sub> is the mean of the two cells.</div>
+</div>
+<h3>Continuity</h3>
+<div class="eq">
+<math display="block"><msubsup><mi>h</mi><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>=</mo><msubsup><mi>h</mi><mrow><mi>i</mi><mo>,</mo><mi>j</mi></mrow><mi>n</mi></msubsup><mo>+</mo><mfrac><mrow><mi>Δ</mi><mi>t</mi></mrow><mrow><mi>Δ</mi><mi>x</mi></mrow></mfrac><mrow><mo>(</mo><msubsup><mi>q</mi><mrow><mi>i</mi><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>,</mo><mi>j</mi></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>−</mo><msubsup><mi>q</mi><mrow><mi>i</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>,</mo><mi>j</mi></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>+</mo><msubsup><mi>q</mi><mrow><mi>i</mi><mo>,</mo><mi>j</mi><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>−</mo><msubsup><mi>q</mi><mrow><mi>i</mi><mo>,</mo><mi>j</mi><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>)</mo></mrow><mo>+</mo><mi>Δ</mi><mi>t</mi><mo>(</mo><mi>R</mi><mo>−</mo><mi>L</mi><mo>)</mo></math>
+<div class="where">Losses are capped at the water available in the cell, so depth never goes negative.</div>
+</div>
+<h3>Stability and Limiters</h3>
+<ul>
+<li><strong>Time step.</strong> Δt = α Δx / max(|u| + √(g h)), α = 0.7 by default, at most 2 s. The maximum is taken over all land cells, and land next to boundary water counts with the depth the boundary stage would give it, so a rising tide never outruns the step. The bound comes from a GPU reduction refreshed every frame and is padded by 15%.</li>
+<li><strong>Froude limit.</strong> |q| ≤ Fr<sub>max</sub> h<sub>f</sub> √(g h<sub>f</sub>) with Fr<sub>max</sub> = 1, which prevents unphysical supercritical jets on steep cells.</li>
+<li><strong>Positivity.</strong> A face may not drain more than a quarter of the donor cell's water in one step, |q| Δt ≤ h<sub>donor</sub> Δx / 4, so four outflowing faces cannot empty a cell below zero.</li>
+<li><strong>Wetting and drying.</strong> Faces with flow depth under 1 mm carry no flow. Faces into building cells and between two boundary cells carry no flow.</li>
+</ul>
+
+<h2 id="gpu">GPU Implementation</h2>
+<p>The state is stored in 32-bit float textures, one texel per cell: depth, east-face discharge, north-face discharge and the time the cell was last wet. The bed is a second texture holding elevation, Manning n, cell type and loss rate. One time step is two full-screen fragment shader passes, momentum then continuity, so every cell is updated in parallel. The order of operations follows a reference Python implementation line by line, and the two are compared after every change (see <a href="#verification">Verification</a>).</p>
+<ul>
+<li><strong>Reductions.</strong> The stable time step, the deepest water, the flooded area and the water volume come from a 4 × 4 reduction pyramid read back asynchronously, so the CPU never waits on the GPU during a run.</li>
+<li><strong>Running statistics.</strong> Every 10 simulated seconds a pass updates peak depth, first arrival of 10 cm, peak speed and peak hazard rating per cell.</li>
+<li><strong>Building sampling.</strong> A pass gathers, for every building and high-water mark, the water on the ring of cells around it. The result is read back about twice a second and turned into damage on the CPU.</li>
+<li><strong>Snapshots.</strong> The state and statistics are copied to half-precision textures every 30 to 60 simulated minutes, within a 160 MB budget, so the timeline can jump back without re-running from the start.</li>
+<li><strong>Display field.</strong> A last pass writes the water surface, extended one cell into dry ground so it meets the terrain cleanly, with depth and velocity, to a half-float texture that the water, tracers and analysis layers read with hardware filtering.</li>
+</ul>
+
+<h2 id="boundary">Boundary Conditions and Scenarios</h2>
+<h3>Hurricane Sandy Replay</h3>
+<p>The boundary water level is the six-minute observed record at The Battery (NOAA 8518750) on NAVD88, from 17:00 EDT on 29 October to 02:00 EDT on 30 October 2012 (nine hours). The record peaked at 3.44 m at 21:24 EDT. The Battery is 2 to 4 km south of the domain, and the four USGS high-water marks within 100 m of the waterfront (three on the Hoboken bulkhead, one on the Manhattan side) sit about 0.22 m below its peak. By default the record is lowered by 0.216 m, the mean difference between those four marks and the simulated peak with the raw record. The correction can be switched off; results with and without it are both reported below.</p>
+<h3>Synthetic Coastal Surge</h3>
+<p>The boundary is the astronomical tide plus a Gaussian surge pulse:</p>
+<div class="eq">
+<math display="block"><mi>η</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mi>A</mi><mi>cos</mi><mo>(</mo><mn>2</mn><mi>π</mi><mo>(</mo><mi>t</mi><mo>−</mo><msub><mi>t</mi><mi>HW</mi></msub><mo>)</mo><mo>/</mo><msub><mi>T</mi><mn>2</mn></msub><mo>)</mo><mo>+</mo><mi>S</mi><mspace width="0.2em"/><msup><mi>e</mi><mrow><mo>−</mo><msup><mrow><mo>(</mo><mo>(</mo><mi>t</mi><mo>−</mo><msub><mi>t</mi><mi>p</mi></msub><mo>)</mo><mo>/</mo><mi>σ</mi><mo>)</mo></mrow><mn>2</mn></msup></mrow></msup><mo>+</mo><mi>SLR</mi></math>
+<div class="where">A = 0.72 m and T<sub>2</sub> = 12.42 h (the principal lunar tide at The Battery, about mean sea level at 0 m NAVD88), σ is a quarter of the storm duration, t<sub>p</sub> is five hours into the run, and S is chosen so the combined peak equals the requested level. The surge peak can fall on high, mid or low tide.</div>
+</div>
+<h3>Rainfall</h3>
+<p>Rain is spatially uniform with a constant intensity over a chosen window (a block hyetograph). The design-storm helper takes depths from NOAA Atlas 14 at Hoboken: for example 73 mm in one hour at 1 in 100 years, and 91 mm in six hours at 1 in 10 years. The scenario note reports the return period of any depth and duration by log-log interpolation in the Atlas 14 table. Drainage capacity is removed from every wet land cell, and infiltration from the green fraction of each cell. Rain on building cells is not routed. Rainfall-only scenarios start near low tide so the river stays in its banks.</p>
+<h3>Presets</h3>
+<div class="table-wrap"><table>
+<tr><th>Preset</th><th>Boundary</th><th>Rain</th><th class="num">Drainage, infiltration (mm/h)</th></tr>
+<tr><td>Hurricane Sandy</td><td>Battery record, −0.216 m</td><td>None</td><td class="num">10, 10</td></tr>
+<tr><td>1-in-100-Year Coastal Flood</td><td>Peak 3.05 m (FEMA base flood elevation, 10 ft) on high tide, 12 h storm</td><td>None</td><td class="num">10, 10</td></tr>
+<tr><td>Coastal Flood With Sea Level Rise</td><td>As above plus 0.6 m</td><td>None</td><td class="num">10, 10</td></tr>
+<tr><td>1-in-100-Year Cloudburst</td><td>Tide only</td><td>73 mm/h for 1 h</td><td class="num">25, 12</td></tr>
+<tr><td>Ida-Like Downpour</td><td>Tide only</td><td>80 mm/h for 1 h</td><td class="num">25, 12</td></tr>
+<tr><td>Compound Surge and Rain</td><td>Peak 2.3 m on high tide</td><td>15.2 mm/h for 6 h</td><td class="num">15, 10</td></tr>
+</table></div>
+<p>Every parameter of every preset can be edited, and defences can be added: a continuous wall along the Hoboken bulkhead at a chosen crest, barriers drawn on the map, and pumps that remove water at a set rate. Barriers raise the cells along their line to the crest elevation, with the line made four-connected so water cannot slip through diagonally.</p>
+
+<h2 id="hazard">Hazard Outputs</h2>
+<ul>
+<li><strong>Depth and water surface</strong> at every cell, every step.</li>
+<li><strong>Speed:</strong> cell-centre velocity from the average of the two face discharges in each direction, divided by depth (cells deeper than 5 cm).</li>
+<li><strong>Hazard to people</strong> after the UK Environment Agency and Defra method FD2320: HR = d (v + 0.5) + DF, with debris factor DF = 0.5 where depth exceeds 0.25 m. Classes: low (below 0.75, caution), moderate (to 1.25, danger for some), significant (to 2.0, danger for most) and extreme (danger for all).</li>
+<li><strong>Arrival time:</strong> the first time each cell holds 10 cm of water.</li>
+<li><strong>Flooded land:</strong> the area of land cells deeper than 10 cm. Boundary water is excluded.</li>
+</ul>
+
+<h2 id="losses">Damage and Losses</h2>
+<h3>Water at Each Building</h3>
+<p>For each building the sampling pass reads the ring of open cells around its footprint. The water surface at the building is the mean, over the ring cells that have been wet, of each cell's peak water surface. The mean rather than the maximum keeps sloping ground from passing for depth when rain wets every cell. Depth at the building is that surface minus the ground level defined above.</p>
+<h3>Entry</h3>
+<p>FloodVuln curves describe damage given that water has entered a building. A building counts as reached, and takes damage, once 15 cm of water stands against it; thinner sheet flow from rain is treated as not entering.</p>
+<h3>Damage Ratio</h3>
+<p>Depth above the first floor is the water surface minus (ground level + NSI first-floor height). FloodVuln Global gives the distribution of the damage ratio at that depth for the building's archetype, with New Jersey or New York calibration: its mean, and its 10th, 50th and 90th percentiles. Because the model is fitted to claims that include basement and below-first-floor damage, the ratio can be positive when water is below the first floor.</p>
+<h3>Taller Buildings</h3>
+<p>The curves were fitted mostly to houses and small multifamily buildings, where the flooded floors are a large share of the value. For taller buildings damage is applied to the two lowest storeys only: the share of value exposed is min(1, 2 / storeys), with storeys from the NSI or, failing that, the lidar height divided by 3.1 m.</p>
+<div class="eq">
+<math display="block"><mi>Loss</mi><mo>=</mo><mover><mi>D</mi><mo>‾</mo></mover><mo>(</mo><msub><mi>d</mi><mi>FF</mi></msub><mo>)</mo><mo>×</mo><mo>(</mo><msub><mi>V</mi><mi>structure</mi></msub><mo>+</mo><msub><mi>V</mi><mi>contents</mi></msub><mo>)</mo><mo>×</mo><mi>min</mi><mo>(</mo><mn>1</mn><mo>,</mo><mspace width="0.2em"/><mn>2</mn><mo>/</mo><mi>storeys</mi><mo>)</mo></math>
+<div class="where">D̄ is the mean damage ratio at depth above the first floor d<sub>FF</sub>; V are the NSI modelled replacement values for structure and contents.</div>
+</div>
+<h3>Uncertainty Range</h3>
+<p>The range shown under the expected loss sums the 10th and 90th percentile damage of every building. It assumes building damage is fully correlated within the event, so it is a deliberately wide band, not a portfolio confidence interval.</p>
+<h3>People and Vehicles</h3>
+<p>Residents affected are the NSI night-time population of buildings with water above the first floor. Vehicles are counted where the modelled peak depth exceeds 30 cm (water at the floor and engine intake on most cars) and 60 cm (where cars float, and the usual threshold for a write-off); in the scene, cars lift off once the local depth passes 0.55 m.</p>
+
+<h2 id="portfolio">Portfolio Scoring</h2>
+<p>A portfolio is a CSV of properties with id, latitude, longitude and value, and optionally loan balance, type and first-floor height. Each property is matched to the nearest open cell within four cells and scored with the same damage model: depth, damage ratio with its percentiles, expected loss, and for loans the loan-to-value ratio after damage, loan / (value − loss). The summary counts loans that the event pushes over 80% and over 100% loan to value. The demo book is 600 small residential properties drawn from the NSI, valued at their per-unit structure value, with synthetic loans between 55% and 90% of value.</p>
+
+<h2 id="validation">Validation: Hurricane Sandy</h2>
+<p>After Sandy the USGS surveyed the elevations of mud lines, debris lines and seed lines that the peak water left on buildings and structures. Ten such high-water marks fall inside the domain: eight in Hoboken and two on the Manhattan bulkhead. The four within 100 m of the waterfront, three in Hoboken and one in Manhattan, set the boundary correction; the other six are held out. Simulated values are the peak water surface on the cells around each mark from a full nine-hour run at 4 m.</p>
+<div class="table-wrap"><table id="hwm-table">
+<tr><th>Mark</th><th>Location</th><th>Quality</th><th>Use</th><th class="num">Observed</th><th class="num">Raw boundary</th><th class="num">Corrected</th><th class="num">Error</th></tr>
+</table></div>
+<div class="table-wrap"><table id="hwm-stats">
+<tr><th>Set</th><th class="num">Marks</th><th class="num">Bias</th><th class="num">Mean absolute error</th><th class="num">RMSE</th></tr>
+</table></div>
+<div class="figure"><svg id="hwm-figure" viewBox="0 0 720 300" role="img" aria-label="Observed against simulated high-water marks"></svg>
+<div class="cap">Observed against simulated peak water surface (m NAVD88) with the corrected boundary. Blue: waterfront calibration marks. Orange: held-out marks. The line is one to one.</div></div>
+<h3>Reading the Results</h3>
+<p>The simulated water surface across Hoboken at the peak is nearly flat, within 5 cm of the boundary level, which is expected when the city fills slowly behind a breached waterfront. The surveyed marks scatter around that level by about ±0.5 m. Some of the scatter is mark quality: 6335 is a fair-quality stain line on the Manhattan bulkhead, probably raised by waves, and 6080 and 6081, less than 300 m apart, differ by 0.8 m. With 6335 set aside, the five inland held-out marks have a bias of +0.02 m and a median absolute error of 0.13 m. The raw Battery record overpredicts every waterfront mark, by 0.18 to 0.27 m, which is the reason for the correction.</p>
+<p>Over the event 2.8 km² of land floods deeper than 10 cm in the corrected run (2.9 km² with the raw record). Much of it stays flooded after the tide falls: 1.6 km² is still under water at the end of the run, and low-lying west Hoboken took days to drain after the storm.</p>
+
+<h2 id="verification">Verification</h2>
+<p>The equations are solved twice: on the GPU in the browser and by a reference Python implementation. The reference is tested against analytic and limiting cases, and the GPU code is compared with it after every change.</p>
+<div class="table-wrap"><table id="tests-table"><tr><th>Test</th><th>Result</th></tr></table></div>
+<p id="parity-text"></p>
+
+<h2 id="performance">Performance</h2>
+<p>Measured on an NVIDIA GeForce RTX 4090 in Microsoft Edge (Direct3D 11 through ANGLE), solver only, Sandy boundary on the rising limb:</p>
+<div class="table-wrap"><table>
+<tr><th>Cell size</th><th class="num">Steps per second</th><th class="num">Mean time step</th><th class="num">Simulated time per real second</th></tr>
+<tr><td>8 m</td><td class="num">about 30,000</td><td class="num">0.40 s</td><td class="num">about 12,000 ×</td></tr>
+<tr><td>4 m</td><td class="num">about 20,000</td><td class="num">0.20 s</td><td class="num">about 4,000 ×</td></tr>
+<tr><td>2 m</td><td class="num">about 3,300</td><td class="num">0.10 s</td><td class="num">about 340 ×</td></tr>
+</table></div>
+<p>The nine-hour Sandy replay takes about 137,000 steps at 4 m. In the app the solver shares each frame with rendering: the number of steps per frame adapts to keep the display near 40 to 60 frames per second, and the clock shows the speed reached. Integrated graphics are typically ten to twenty times slower, and the 8 m grid and the Fast render setting are there for them.</p>
+
+<h2 id="limitations">Limitations</h2>
+<ul>
+<li><strong>Drainage is lumped.</strong> There is no sewer network: drainage removes water at a fixed rate from every wet land cell, so surcharging sewers, backflow through outfalls and the combined sewer system are not represented.</li>
+<li><strong>Still-water boundary.</strong> The river level is prescribed from a gauge record or a synthetic curve. Waves, wave run-up and overtopping, and wind set-up across the river are not modelled, and the river itself carries no computed current.</li>
+<li><strong>One gauge.</strong> The Sandy boundary comes from The Battery with a single uniform correction. The real water level along the waterfront varied in space and time in ways one offset cannot capture.</li>
+<li><strong>Terrain date.</strong> The lidar is from 2014 (New Jersey) and 2017 (New York), after Sandy. Construction pits and rail cuts in the 2017 survey appear as deep depressions, and post-Sandy waterfront changes are in the terrain the Sandy replay uses.</li>
+<li><strong>Buildings are blocks.</strong> Water does not enter buildings in the solver; doors, basements, garages and subway entrances do not store or convey water. Underground infrastructure (PATH, subway, tunnels) is not modelled.</li>
+<li><strong>Exposure is modelled.</strong> NSI values are modelled replacement costs, not market values or insured limits; first-floor heights are partly imputed in the NSI; contents values follow NSI ratios.</li>
+<li><strong>Damage curves are residential.</strong> FloodVuln is fitted to NFIP claims, which are mostly residential. Commercial, industrial and large multifamily buildings use proxy curves, and the two-storey rule for taller buildings is an assumption.</li>
+<li><strong>No time dimension in damage.</strong> Damage depends on peak depth only, not on duration, velocity or contamination. Business interruption, displacement costs and infrastructure losses are not included.</li>
+<li><strong>Vehicles are placed, not observed.</strong> Parked car positions follow kerbside spacing along OSM streets and convey order of magnitude only.</li>
+<li><strong>Single events.</strong> Each run is one scenario. There is no stochastic event set, so annual expected loss and return-period losses are not computed here.</li>
+</ul>
+
+<h2 id="outputs">Exports and Formats</h2>
+<ul>
+<li><strong>Building results</strong> (CSV): one row per building with location, class, height, ground level, NSI attributes, archetype, peak water surface, depths, damage ratio percentiles, value share and expected loss.</li>
+<li><strong>Peak depth grid</strong> (ESRI ASCII grid with a .prj file): peak depth so far on land in NAD83 / UTM zone 18N at the model resolution; buildings and boundary water are NODATA.</li>
+<li><strong>Time series</strong> (CSV): boundary level, rainfall, flooded land, water volume, buildings reached and expected loss every five simulated minutes.</li>
+<li><strong>Portfolio results</strong> (CSV) and an image of the current view (PNG).</li>
+<li><strong>Share links</strong> encode the scenario, model settings, defences, display and camera, so a recipient opens the same run.</li>
+</ul>
+
+<h2 id="references">References and Licences</h2>
+<ol class="refs">
+<li>Bates, P.D., Horritt, M.S. and Fewtrell, T.J. (2010). A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. <i>Journal of Hydrology</i> 387, 33–45.</li>
+<li>de Almeida, G.A.M., Bates, P., Freer, J.E. and Souvignet, M. (2012). Improving the stability of a simple formulation of the shallow water equations for 2-D flood modeling. <i>Water Resources Research</i> 48, W05528.</li>
+<li>HR Wallingford, Flood Hazard Research Centre and Risk and Policy Analysts (2006). <i>Flood Risks to People, Phase 2</i>. Defra / Environment Agency R&amp;D Technical Report FD2320/TR2.</li>
+<li>Perica, S. et al. (2015). <i>NOAA Atlas 14, Volume 10: Precipitation-Frequency Atlas of the United States, Northeastern States</i>. NOAA National Weather Service.</li>
+<li>McCallum, B.E. et al. (2013). <i>Monitoring storm tide and flooding from Hurricane Sandy along the Atlantic coast of the United States, October 2012</i>. USGS Open-File Report 2013–1043.</li>
+<li>Gornitz, V. et al. (2019). New York City Panel on Climate Change 2019 Report, Chapter 3: Sea Level Rise. <i>Annals of the New York Academy of Sciences</i> 1439, 71–94.</li>
+<li>U.S. Army Corps of Engineers. <i>National Structure Inventory (NSI) Technical Documentation</i>. Hydrologic Engineering Center.</li>
+</ol>
+<p>US federal data (USGS, NOAA, USDA, FEMA, USACE) are in the public domain. Building footprints and streets © OpenStreetMap contributors, available under the Open Database Licence. Rendering uses three.js (MIT licence). Type is Geist and Geist Mono (SIL Open Font Licence).</p>
+
+<footer>FloodTwin is built by Entanglix. Damage modelling by <a href="https://alanhuang116.github.io/floodvuln/">FloodVuln Global</a>. Company: <a href="https://entanglix.tech/">entanglix.tech</a>. Results are model estimates for illustration and screening; they are not a substitute for a site survey, an engineering assessment or an official flood map.</footer>
+</main>
+</div>
+
+<script>
+// Validation tables and figure from the same file the app reads.
+fetch('data/validation.json').then(r => r.json()).then(V => {
+  const t = document.getElementById('hwm-table');
+  const fmt = v => v.toFixed(2), sgn = v => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}`;
+  for (const r of V.hwm) {
+    const tr = t.insertRow();
+    [r.id, r.site, r.quality.split(':')[0], r.role === 'calibration' ? 'Calibration' : 'Held out', fmt(r.obs), fmt(r.raw), fmt(r.corrected), sgn(r.corrected - r.obs)]
+      .forEach((v, k) => { const td = tr.insertCell(); td.textContent = v; if (k >= 4) td.className = 'num'; });
+  }
+  const s = document.getElementById('hwm-stats'), S = V.stats;
+  [['All marks, raw boundary', S.raw_all], ['All marks, corrected', S.corrected_all], ['Held out, raw boundary', S.raw_heldout],
+   ['Held out, corrected', S.corrected_heldout], ['Held out inland (excluding 6335), corrected', S.corrected_inland]].forEach(([name, x]) => {
+    const tr = s.insertRow();
+    [name, x.n, `${sgn(x.bias)} m`, `${x.mae.toFixed(2)} m`, `${x.rmse.toFixed(2)} m`].forEach((v, k) => { const td = tr.insertCell(); td.textContent = v; if (k) td.className = 'num'; });
+  });
+  const tt = document.getElementById('tests-table');
+  for (const x of V.tests) { const tr = tt.insertRow(); tr.insertCell().textContent = x.name; tr.insertCell().textContent = x.result; }
+  const p = V.parity;
+  document.getElementById('parity-text').textContent = `GPU against CPU over ${p.steps} steps of a flood on the real terrain: largest depth difference ${p.max_abs_dh_m.toExponential(1)} m, mean ${p.mean_abs_dh_m.toExponential(1)} m, largest discharge difference ${p.max_abs_dq_m2s.toExponential(1)} m²/s, and a volume ratio of ${p.volume_ratio}. The differences are single-precision rounding.`;
+  // figure
+  const svg = document.getElementById('hwm-figure'), NS = 'http://www.w3.org/2000/svg';
+  const W = 720, H = 300, M = { l: 56, r: 20, t: 14, b: 40 }, d0 = 2.7, d1 = 3.9;
+  const sx = v => M.l + (v - d0) / (d1 - d0) * (W - M.l - M.r), sy = v => H - M.b - (v - d0) / (d1 - d0) * (H - M.t - M.b);
+  const add = (tag, a, txt) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (txt) e.textContent = txt; svg.appendChild(e); return e; };
+  for (let v = 2.8; v <= 3.81; v += 0.2) {
+    add('line', { x1: M.l, x2: W - M.r, y1: sy(v), y2: sy(v), stroke: '#1d252b' });
+    add('line', { y1: M.t, y2: H - M.b, x1: sx(v), x2: sx(v), stroke: '#1d252b' });
+    add('text', { x: M.l - 8, y: sy(v) + 4, fill: '#75828a', 'font-size': 12, 'text-anchor': 'end' }, v.toFixed(1));
+    add('text', { x: sx(v), y: H - M.b + 18, fill: '#75828a', 'font-size': 12, 'text-anchor': 'middle' }, v.toFixed(1));
+  }
+  add('line', { x1: sx(d0), y1: sy(d0), x2: sx(d1), y2: sy(d1), stroke: '#4a555c' });
+  add('text', { x: (M.l + W - M.r) / 2, y: H - 6, fill: '#75828a', 'font-size': 12, 'text-anchor': 'middle' }, 'Observed');
+  add('text', { x: 14, y: (M.t + H - M.b) / 2, fill: '#75828a', 'font-size': 12, 'text-anchor': 'middle', transform: `rotate(-90 14 ${(M.t + H - M.b) / 2})` }, 'Simulated');
+  for (const r of V.hwm) {
+    const c = add('circle', { cx: sx(r.obs), cy: sy(r.corrected), r: 5, fill: r.role === 'calibration' ? '#3987e5' : '#d95926', stroke: '#0f1418', 'stroke-width': 2 });
+    const tl = document.createElementNS(NS, 'title'); tl.textContent = `HWM ${r.id}: observed ${fmt(r.obs)} m, simulated ${fmt(r.corrected)} m`; c.appendChild(tl);
+  }
+}).catch(() => {});
+// contents highlight
+const links = [...document.querySelectorAll('nav.toc a')];
+const io = new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === `#${e.target.id}`)); }, { rootMargin: '-20% 0px -70% 0px' });
+document.querySelectorAll('main h2[id]').forEach(h => io.observe(h));
+</script>
+</body>
+</html>

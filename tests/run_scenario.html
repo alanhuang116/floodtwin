@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Scenario Run</title>
+<script type="importmap">{"imports": {"three": "../web/vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<pre id="out">running</pre>
+<script type="module">
+// Runs a scenario headlessly with the production modules and reports the
+// peak water surface at the USGS high-water marks, flood extent over time and
+// building impacts. Query: ?preset=sandy&dx=4&slr=0
+import * as THREE from 'three';
+import { loadAll } from '../web/js/data.js';
+import { buildGrid, buildSamples } from '../web/js/grid.js';
+import { FloodSolver } from '../web/js/solver.js';
+import { presetById, makeScenario } from '../web/js/scenarios.js';
+import { makeVuln } from '../web/js/vuln.js';
+
+const out = document.getElementById('out');
+const q = new URLSearchParams(location.search);
+try {
+  const t0 = performance.now();
+  const data = await loadAll('../web/data');
+  const preset = presetById(q.get('preset') || 'sandy');
+  const p = { ...preset.p };
+  if (q.has('slr')) p.slr = +q.get('slr');
+  if (q.has('offset')) p.offset = +q.get('offset');
+  if (q.has('drainage')) p.drainage = +q.get('drainage');
+  const dx = +(q.get('dx') || 4);
+  const g = buildGrid(data, { dx, drainage: p.drainage, infiltration: p.infiltration,
+    waterfrontBarrier: q.get('barrier') ? { on: true, crest: +q.get('barrier') } : null });
+  const hwm = data.events.hwm;
+  const samples = buildSamples(data, g, hwm);
+  const renderer = new THREE.WebGLRenderer({ canvas: document.createElement('canvas'), antialias: false });
+  const solver = new FloodSolver(renderer, { nx: g.nx, ny: g.ny, dx: g.dx, bed: g.bed });
+  solver.minCoastZ = g.minCoastZ;
+  solver.setBuildingSamples(samples.ids, samples.count);
+  const sc = makeScenario(p, data.events);
+  const vuln = makeVuln(data.events);
+  const tPrep = performance.now() - t0;
+
+  let t = 0, steps = 0, lastStats = 0, nextLog = 0;
+  const series = [];
+  solver.stage = sc.stage(0);
+  solver.reduceSync();
+  const tRun0 = performance.now();
+  while (t < sc.duration) {
+    solver.stage = sc.stage(t);
+    solver.rain = sc.rain(t) / 3.6e6;
+    if (steps % 20 === 0) solver.reduceSync();
+    const dt = Math.min(solver.stableDt(), sc.duration - t + 1e-6);
+    solver.step(dt); t += dt; steps++;
+    if (t - lastStats >= 10) { solver.updateStats(); lastStats = t; }
+    if (t >= nextLog) {
+      solver.reduceSync();
+      series.push([Math.round(t), +solver.stage.toFixed(3), Math.round(solver.wetArea), Math.round(solver.volume)]);
+      nextLog += 900;
+    }
+  }
+  solver.updateStats();
+  const runMs = performance.now() - tRun0;
+  // read building and HWM samples
+  const buf = solver.sampleBuildingsSync();
+  const nb = data.buildings.count;
+  const hw = hwm.map((h, k) => ({ id: h.id, x: h.x, y: h.y, obs: h.elev_m, sim: +buf[4 * (nb + k) + 3].toFixed(3), quality: h.quality, type: h.type, county: h.county }));
+  // building impacts
+  const cols = data.buildings.columns, ig = cols.indexOf('g'), iside = cols.indexOf('side');
+  let flooded = 0, aboveFF = 0, loss = 0, lossC = 0, people = 0, exposed = 0;
+  for (let b = 0; b < nb; b++) {
+    const wse = buf[4 * b + 3], a = data.buildings.attrs[b];
+    const row = data.buildings.rows[b];
+    if (wse > row[ig] + 0.05) flooded++;
+    if (!a || !a.arch) continue;
+    exposed += a.vs;
+    const r = vuln.damage(a.arch, row[iside], wse, row[ig], a.ffh);
+    if (r.d > 0 && wse > row[ig]) { aboveFF++; people += a.pn; }
+    loss += r.mean * a.vs; lossC += r.mean * a.vc;
+  }
+  const stats = solver.readStats();
+  let maxArea = 0;
+  for (let c = 0; c < g.N; c++) if (g.kind[c] === 0 && stats[4 * c] > 0.10) maxArea += dx * dx;
+  out.textContent = JSON.stringify({ ok: true, preset: preset.id, dx, nx: g.nx, ny: g.ny, steps, simSeconds: Math.round(t),
+    prepMs: Math.round(tPrep), runMs: Math.round(runMs), speedup: Math.round(t / (runMs / 1000)),
+    peakStage: sc.peakStage, minCoastZ: g.minCoastZ, hwm: hw, series,
+    impact: { buildingsWet: flooded, aboveFirstFloor: aboveFF, structureLoss: Math.round(loss), contentsLoss: Math.round(lossC),
+              residentsAboveFF: people, exposedValue: Math.round(exposed), maxFloodedAreaKm2: +(maxArea / 1e6).toFixed(3) } });
+} catch (e) {
+  out.textContent = JSON.stringify({ ok: false, error: String(e && e.stack || e) });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+sandy at 4 m (1014 x 928 cells): 140,212 steps, 9.0 h simulated in 0.0 s (xNone), prep 0.1 s; peak stage 3.436 m, lowest coast 0.50 m
+   t= 0.00 h  stage  1.701 m  flooded  0.000 km2  volume   0.000 hm3
+   t= 0.25 h  stage  1.791 m  flooded  0.071 km2  volume   0.040 hm3
+   t= 0.50 h  stage  1.895 m  flooded  0.105 km2  volume   0.053 hm3
+   t= 0.75 h  stage  2.008 m  flooded  0.159 km2  volume   0.076 hm3
+   t= 1.00 h  stage  2.120 m  flooded  0.256 km2  volume   0.117 hm3
+   t= 1.25 h  stage  2.244 m  flooded  0.394 km2  volume   0.189 hm3
+   t= 1.50 h  stage  2.357 m  flooded  0.549 km2  volume   0.280 hm3
+   t= 1.75 h  stage  2.480 m  flooded  0.761 km2  volume   0.421 hm3
+   t= 2.00 h  stage  2.623 m  flooded  1.031 km2  volume   0.629 hm3
+   t= 2.25 h  stage  2.777 m  flooded  1.308 km2  volume   0.907 hm3
+   t= 2.50 h  stage  2.959 m  flooded  1.622 km2  volume   1.322 hm3
+   t= 2.75 h  stage  3.117 m  flooded  1.959 km2  volume   1.797 hm3
+   t= 3.00 h  stage  3.210 m  flooded  2.286 km2  volume   2.224 hm3
+   t= 3.25 h  stage  3.259 m  flooded  2.523 km2  volume   2.581 hm3
+   t= 3.50 h  stage  3.307 m  flooded  2.672 km2  volume   2.942 hm3
+   t= 3.75 h  stage  3.376 m  flooded  2.776 km2  volume   3.338 hm3
+   t= 4.00 h  stage  3.417 m  flooded  2.840 km2  volume   3.696 hm3
+   t= 4.25 h  stage  3.434 m  flooded  2.881 km2  volume   3.969 hm3
+   t= 4.50 h  stage  3.408 m  flooded  2.900 km2  volume   4.111 hm3
+   t= 4.75 h  stage  3.347 m  flooded  2.889 km2  volume   4.083 hm3
+   t= 5.00 h  stage  3.259 m  flooded  2.854 km2  volume   3.927 hm3
+   t= 5.25 h  stage  3.142 m  flooded  2.798 km2  volume   3.678 hm3
+   t= 5.50 h  stage  3.009 m  flooded  2.726 km2  volume   3.391 hm3
+   t= 5.75 h  stage  2.846 m  flooded  2.608 km2  volume   3.065 hm3
+   t= 6.00 h  stage  2.645 m  flooded  2.469 km2  volume   2.731 hm3
+   t= 6.25 h  stage  2.431 m  flooded  2.297 km2  volume   2.423 hm3
+   t= 6.50 h  stage  2.180 m  flooded  2.126 km2  volume   2.163 hm3
+   t= 6.75 h  stage  1.950 m  flooded  1.981 km2  volume   1.975 hm3
+   t= 7.00 h  stage  1.725 m  flooded  1.888 km2  volume   1.840 hm3
+   t= 7.25 h  stage  1.519 m  flooded  1.833 km2  volume   1.737 hm3
+   t= 7.50 h  stage  1.369 m  flooded  1.793 km2  volume   1.655 hm3
+   t= 7.75 h  stage  1.244 m  flooded  1.758 km2  volume   1.586 hm3
+   t= 8.00 h  stage  1.124 m  flooded  1.727 km2  volume   1.525 hm3
+   t= 8.25 h  stage  1.017 m  flooded  1.700 km2  volume   1.473 hm3
+   t= 8.50 h  stage  0.928 m  flooded  1.675 km2  volume   1.426 hm3
+   t= 8.75 h  stage  0.819 m  flooded  1.651 km2  volume   1.385 hm3
+   t= 9.00 h  stage  0.701 m  flooded  1.628 km2  volume   1.347 hm3
+   HWM 6091: observed 3.231 m, simulated 3.438 m, diff +0.207  (Hudson County, Mud, Excellent)
+   HWM 6080: observed 2.865 m, simulated 3.415 m, diff +0.550  (Hudson County, Mud, Good: +/-)
+   HWM 6085: observed 3.200 m, simulated 3.438 m, diff +0.238  (Hudson County, Mud, Good: +/-)
+   HWM 6336: observed 3.170 m, simulated 3.438 m, diff +0.268  (New York County, Seed line, Excellent)
+   HWM 6335: observed 3.749 m, simulated 3.438 m, diff -0.311  (New York County, Stain line, Fair: +/-)
+   HWM 6083: observed 3.078 m, simulated 3.431 m, diff +0.353  (Hudson County, Debris, Fair: +/-)
+   HWM 6084: observed 3.261 m, simulated 3.438 m, diff +0.177  (Hudson County, Debris, Fair: +/-)
+   HWM 6082: observed 3.139 m, simulated 3.431 m, diff +0.292  (Hudson County, Mud, Good: +/-)
+   HWM 6092: observed 3.139 m, simulated 3.428 m, diff +0.289  (Hudson County, Debris, Excellent)
+   HWM 6081: observed 3.658 m, simulated 3.414 m, diff -0.244  (Hudson County, Mud, Good: +/-)
+   HWMs wet 10/10; bias +0.182 m, MAE 0.293 m, RMSE 0.309 m
+   impact: {'buildingsWet': 3085, 'aboveFirstFloor': 1700, 'structureLoss': 3744138344, 'contentsLoss': 2576221972, 'residentsAboveFF': 45137, 'exposedValue': 34509231912, 'maxFloodedAreaKm2': 2.917}

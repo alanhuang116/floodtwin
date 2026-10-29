@@ -1,0 +1,268 @@
+{
+ "name": "Hoboken, New Jersey and Manhattan West Side",
+ "grid": {
+  "epsg": 26918,
+  "x0": 580472,
+  "y0": 4509496,
+  "x1": 584528,
+  "y1": 4513208,
+  "width_m": 4056,
+  "height_m": 3712
+ },
+ "dem_res": 2.0,
+ "dem_cols": 2028,
+ "dem_rows": 1856,
+ "dem_encoding": {
+  "offset": 30.0,
+  "scale": 0.01,
+  "delta": "row",
+  "zigzag": true
+ },
+ "vertical_datum": "NAVD88 (m)",
+ "crs": "NAD83 / UTM zone 18N (EPSG:26918)",
+ "lonlat_from_local": {
+  "lon": [
+   -74.0470060993701,
+   1.1840993649667982e-05,
+   1.2852447941897618e-07,
+   -2.982479748467413e-14,
+   1.597646184252799e-12,
+   2.982478139104813e-14
+  ],
+  "lat": [
+   40.73246905290278,
+   -9.776884575006337e-08,
+   9.007409996294805e-06,
+   -6.075866170929711e-13,
+   -3.167428788989414e-14,
+   -7.227968639784241e-15
+  ],
+  "max_err_deg": 1.345995315205073e-09
+ },
+ "local_from_lonlat": {
+  "x": [
+   10106809.696211396,
+   136251.3408954964,
+   -93852.10236225383,
+   1.8840239711134927,
+   -1265.0816710756917,
+   -12.622740287355555
+  ],
+  "y": [
+   -1815519.259965646,
+   71955.61783966774,
+   110610.32876041817,
+   481.0515968266118,
+   4.954654065433715,
+   9.368213418689265
+  ],
+  "max_err_m": 5.407305434346199e-05
+ },
+ "pois": [
+  {
+   "name": "Hoboken Terminal",
+   "x": 1568.1,
+   "y": 294.8,
+   "kind": "landmark"
+  },
+  {
+   "name": "Stevens Institute of Technology",
+   "x": 1912.3,
+   "y": 1616.5,
+   "kind": "landmark"
+  },
+  {
+   "name": "Pier A Park",
+   "x": 1704.0,
+   "y": 529.5,
+   "kind": "park"
+  },
+  {
+   "name": "Church Square Park",
+   "x": 1234.1,
+   "y": 1096.1,
+   "kind": "park"
+  },
+  {
+   "name": "Hoboken City Hall",
+   "x": 1312.0,
+   "y": 544.0,
+   "kind": "landmark"
+  },
+  {
+   "name": "Elysian Park",
+   "x": 1793.6,
+   "y": 1811.7,
+   "kind": "park"
+  },
+  {
+   "name": "Weehawken Cove",
+   "x": 1725.1,
+   "y": 2886.7,
+   "kind": "water"
+  },
+  {
+   "name": "Lincoln Harbor",
+   "x": 2216.5,
+   "y": 3407.3,
+   "kind": "district"
+  },
+  {
+   "name": "Hudson Yards",
+   "x": 3841.6,
+   "y": 2362.0,
+   "kind": "district"
+  },
+  {
+   "name": "Javits Center",
+   "x": 3783.6,
+   "y": 2861.0,
+   "kind": "landmark"
+  },
+  {
+   "name": "Little Island",
+   "x": 3062.3,
+   "y": 1094.2,
+   "kind": "park"
+  },
+  {
+   "name": "Chelsea Piers",
+   "x": 3225.5,
+   "y": 1593.4,
+   "kind": "landmark"
+  },
+  {
+   "name": "The High Line",
+   "x": 3320.7,
+   "y": 1388.0,
+   "kind": "park"
+  },
+  {
+   "name": "Intrepid Museum",
+   "x": 3861.9,
+   "y": 3615.7,
+   "kind": "landmark"
+  },
+  {
+   "name": "Hudson River",
+   "x": 2513.2,
+   "y": 1863.0,
+   "kind": "water"
+  },
+  {
+   "name": "Hoboken",
+   "x": 956.9,
+   "y": 1346.1,
+   "kind": "place"
+  },
+  {
+   "name": "Manhattan",
+   "x": 3744.9,
+   "y": 1210.8,
+   "kind": "place"
+  },
+  {
+   "name": "Jersey City Heights",
+   "x": 283.3,
+   "y": 1172.2,
+   "kind": "place"
+  }
+ ],
+ "hoboken_waterfront_y": [
+  189.4,
+  3131.1
+ ],
+ "fema_bfe_ft": {
+  "AE": [
+   9.0,
+   10.0
+  ]
+ },
+ "city": {
+  "buildings": 13152,
+  "with_nsi": 8901,
+  "parts": 1034,
+  "trees": 13209,
+  "cars": 26202,
+  "height_sources": {
+   "lidar": 13042,
+   "osm_height": 44,
+   "levels": 13,
+   "nsi_stories": 12,
+   "default": 41
+  },
+  "nsi_value_struct_total": 34509231912,
+  "residents_night": 176034,
+  "archetypes": {
+   "COM.MIXED.1.UNK": 815,
+   "RES.MF2_4.2.UNK": 3564,
+   "RES.SF.1.CRAWL": 126,
+   "RES.SF.1.ELEV_ENCL": 191,
+   "RES.SF.1.SLAB": 62,
+   "RES.SF.2.BASEMENT": 1990,
+   "RES.SF.2.SLAB": 2153
+  }
+ },
+ "sources": [
+  {
+   "name": "USGS 3DEP bare-earth elevation, 1 m lidar",
+   "use": "Terrain",
+   "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage",
+   "retrieved": "2026-10-29T07:13:10Z"
+  },
+  {
+   "name": "USGS 3DEP lidar point clouds (NJ 2014, NYC 2017)",
+   "use": "Building heights, tree canopy",
+   "url": "https://registry.opendata.aws/usgs-lidar/",
+   "retrieved": "2026-10-29T07:22:44Z"
+  },
+  {
+   "name": "USDA NAIP orthoimagery, 0.5 m",
+   "use": "Imagery, vegetation",
+   "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageServer/exportImage",
+   "retrieved": "2026-10-29T07:24:25Z"
+  },
+  {
+   "name": "OpenStreetMap contributors (ODbL)",
+   "use": "Building footprints, streets",
+   "url": "https://www.openstreetmap.org/copyright",
+   "retrieved": "2026-10-29T07:22:44Z"
+  },
+  {
+   "name": "USACE National Structure Inventory",
+   "use": "Building values, occupancy, first-floor height, residents",
+   "url": "https://www.hec.usace.army.mil/confluence/nsi",
+   "retrieved": "2026-10-29T07:33:05Z"
+  },
+  {
+   "name": "NOAA CO-OPS 8518750 The Battery",
+   "use": "Hurricane Sandy water level",
+   "url": "https://tidesandcurrents.noaa.gov/stationhome.html?id=8518750",
+   "retrieved": "2026-10-29T07:33:05Z"
+  },
+  {
+   "name": "USGS Short-Term Network, Hurricane Sandy high-water marks",
+   "use": "Validation",
+   "url": "https://stn.wim.usgs.gov/FEV/",
+   "retrieved": "2026-10-29"
+  },
+  {
+   "name": "NOAA Atlas 14 precipitation frequency",
+   "use": "Design rainfall",
+   "url": "https://hdsc.nws.noaa.gov/pfds/",
+   "retrieved": "2026-10-29T07:33:07Z"
+  },
+  {
+   "name": "FEMA National Flood Hazard Layer",
+   "use": "Effective flood zones",
+   "url": "https://hazards.fema.gov/femaportal/wps/portal/NFHLWMS",
+   "retrieved": "2026-10-29T07:33:08Z"
+  },
+  {
+   "name": "FloodVuln Global (Entanglix)",
+   "use": "Building damage ratios",
+   "url": "https://alanhuang116.github.io/floodvuln/",
+   "retrieved": "2026-10-29"
+  }
+ ]
+}
