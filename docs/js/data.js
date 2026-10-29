@@ -20,6 +20,8 @@ async function fetchBytes(url, onProgress) {
 }
 
 async function gunzip(bytes) {
+  // a server may already have removed the gzip layer (Content-Encoding: gzip)
+  if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) return bytes;
   const ds = new DecompressionStream('gzip');
   const stream = new Blob([bytes]).stream().pipeThrough(ds);
   return new Uint8Array(await new Response(stream).arrayBuffer());

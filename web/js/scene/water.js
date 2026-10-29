@@ -193,7 +193,7 @@ varying vec3 vWPos;`)
   vec3 nWind = vec3(sw0 * 0.55 + sw1 * 0.35 + sw2 * 0.3, 1.0);
   float sFlow = (0.10 + clamp(speed * 0.45, 0.0, 0.75)) * (1.0 - river);
   float sRip = (0.10 + 0.25 * uStorm) * smoothstep(3.0, 0.4, fwp);
-  float sWind = river * (0.16 + 0.42 * uStorm);
+  float sWind = river * (0.11 + 0.26 * uStorm);
   vec2 slope = nFlow.xy * sFlow + nRip.xy * sRip + nWind.xy * sWind;
   float rainVis = uRain * smoothstep(0.9, 0.12, fwp);
   if (rainVis > 0.001) slope += rainRipples(wp / 0.9, uTime) * 0.55 * rainVis + rainRipples(wp / 0.6 + 7.3, uTime * 1.3) * 0.35 * rainVis;
@@ -209,7 +209,7 @@ varying vec3 vWPos;`)
   float foam = smoothstep(0.75, 1.7, fr) * smoothstep(0.03, 0.2, wh) * (1.0 - river);
   foam += smoothstep(0.12, 0.0, dv) * smoothstep(0.2, 0.9, speed) * (1.0 - river);
   float crest = c0.a * 0.45 + c1.a * 0.35 + c2.a * 0.2;
-  foam += river * smoothstep(0.86 - 0.1 * uStorm, 0.99, crest) * uStorm * 0.7;
+  foam += river * smoothstep(0.88 - 0.08 * uStorm, 0.995, crest) * uStorm * 0.35 * nearW;
   foam = clamp(foam, 0.0, 1.0) * smoothstep(0.30, 0.62, fpat + 0.25 * foam);
 
   // absorption and scattering: estuary water in the river, sediment-laden flood water on land
@@ -231,7 +231,9 @@ varying vec3 vWPos;`)
 
   vec3 wEmit = refr * T * (1.0 - fres);
   diffuseColor.rgb = (albedo * (1.0 - T) + vec3(0.82, 0.80, 0.74) * foam) * (0.35 + 0.65 * uDay);
-  float wRough = mix(0.035 + 0.05 * uStorm * river + 0.08 * uRain, 0.65, foam);
+  // wave detail finer than a pixel becomes roughness, so distant sun glints merge into a glitter path
+  float farRough = smoothstep(0.25, 3.0, fwp) * (0.10 + 0.10 * uStorm);
+  float wRough = mix(0.035 + 0.09 * uStorm * river + 0.08 * uRain + farRough, 0.65, foam);
   float edgeA = smoothstep(0.0, 0.035, dv) * smoothstep(0.0, 0.006, wh + river);
   diffuseColor.a = edgeA;
 
